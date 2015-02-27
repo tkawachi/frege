@@ -1,0 +1,25 @@
+general:
+  artifacts:
+    - dist
+
+machine:
+  java:
+    version: oraclejdk8
+
+checkout:
+  post:
+    # cloned repository is too shallow to git describe.
+    # Here I assumed the latest tag exists in last 300 commits.
+    - git fetch --depth 300
+
+dependencies:
+  override:
+    - sudo apt-get update -qq
+    - sudo apt-get install -y byacc
+    - scripts/downloadRelease.sh fregec.jar
+
+test:
+  override:
+    - mkdir -p build dist doc
+    - make compiler1 || true   # until issue#100 is fixed
+    - make runtime compiler fregec.jar dist && java -cp fregec.jar frege.tools.Quick -v fregec.jar
